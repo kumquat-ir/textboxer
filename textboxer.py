@@ -2,7 +2,6 @@
 
 import json
 import math
-import sys
 
 from copy import deepcopy
 
@@ -13,6 +12,7 @@ from PIL import ImageFont
 from pathlib import Path
 
 debug_mode = False
+resource_root = Path("resources")
 
 
 def debug(text):
@@ -243,8 +243,8 @@ def parsestr(textin: str, *, out: str = None):
     text = {}
     images = {}
     flags = []
-    default_data = Path("resources/default/data/")
-    style_root = Path("resources/styles/")
+    default_data = resource_root / "default" / "data"
+    style_root = resource_root / "styles"
     if (style_root / args[0]).exists():
         style = args[0]
         del args[0]
@@ -285,8 +285,8 @@ def parsestrlist(args: list[str], *, style: str = None, text: dict[str, str] = N
         images = {}
     if flags is None:
         flags = []
-    default_data = Path("resources/default/data/")
-    style_root = Path("resources/styles/")
+    default_data = resource_root / "default" / "data"
+    style_root = resource_root / "styles"
     if (style_root / args[0]).exists():
         style = args[0]
         del args[0]
@@ -320,8 +320,8 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
         "flag": flags if flags is not None else []
     }
     debug(predicate_state)
-    default_data = Path("resources/default/data/")
-    style_dir = Path("resources/styles/" + style)
+    default_data = resource_root / "default" / "data"
+    style_dir = resource_root / "styles" / style
     style_data = style_dir / "data"
     if preload_data is not None:
         data = parse_jsons(predicate_state, preload_data)
