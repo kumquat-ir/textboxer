@@ -1,0 +1,17 @@
+{
+  "sort": 1,
+  "predicate": "image:face",
+  "images": {
+    "face": {
+      "type": "dynamic",
+      "key": "face",
+      "pathprefix": "faces",
+      "position": [496, 16]
+    }
+  },
+  "textboxes": {
+    "main": {
+      "max_width": 460
+    }
+  }
+}

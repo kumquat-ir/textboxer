@@ -1,0 +1,28 @@
+{
+  "sort": 0,
+  "predicate": "always",
+  "fonts": {
+    "default": {
+      "path": "TerminusTTF-Bold.ttf",
+      "size": 20,
+      "antialias": false,
+      "spacing": 3
+    }
+  },
+  "images": {
+    "frame": {
+      "type": "static",
+      "path": "frame.png",
+      "position": [0, 0]
+    }
+  },
+  "textboxes": {
+    "main": {
+      "font": "default",
+      "anchor": [20, 17],
+      "max_width": 564,
+      "max_lines": 4,
+      "line_wrap": "cut"
+    }
+  }
+}

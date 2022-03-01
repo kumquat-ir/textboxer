@@ -1,0 +1,9 @@
+{
+  "sort": 100,
+  "predicate": "flag:scared",
+  "textboxes": {
+    "main": {
+      "font": "scared"
+    }
+  }
+}

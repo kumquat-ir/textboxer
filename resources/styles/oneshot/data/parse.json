@@ -1,0 +1,5 @@
+{
+  "predicate": "parse",
+  "args": ["text:main", "image:face"],
+  "str": ["image:face", "textfill:main"]
+}

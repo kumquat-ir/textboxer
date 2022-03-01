@@ -1,0 +1,37 @@
+{
+  "sort": 2,
+  "predicate": "image:face",
+  "images": {
+    "basesize": [608, 230],
+    "frame": {
+      "position": [0, 118]
+    },
+    "face_bg": {
+      "type": "expand",
+      "mode": "static",
+      "path": "black.png",
+      "position": [494, 0],
+      "size": [114, 114],
+      "divide": [1, 2, 1, 2]
+    },
+    "face": {
+      "type": "dynamic",
+      "key": "face",
+      "pathprefix": "faces",
+      "position": [499, 5]
+    },
+    "face_frame": {
+      "type": "expand",
+      "mode": "static",
+      "path": "frame_transparent.png",
+      "position": [494, 0],
+      "size": [114, 114],
+      "divide": [5, 6, 5, 6]
+    }
+  },
+  "textboxes": {
+    "main": {
+      "anchor": [17, 129]
+    }
+  }
+}

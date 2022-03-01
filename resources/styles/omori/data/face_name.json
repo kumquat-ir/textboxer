@@ -1,0 +1,14 @@
+{
+  "sort": 3,
+  "predicate": "textbox:name&image:face",
+  "images": {
+    "frame_name": {
+      "position": [0, 70]
+    }
+  },
+  "textboxes": {
+    "name": {
+      "anchor": [12, 75]
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "sort": 0,
+  "predicate": "always",
+  "fonts": {
+    "default": {
+      "path": "OMORI_GAME2.ttf",
+      "size": 28,
+      "antialias": true,
+      "spacing": 4
+    },
+    "scared": {
+      "path": "OMORI_GAME.ttf",
+      "size": 28,
+      "antialias": true,
+      "spacing": 4
+    }
+  },
+  "images": {
+    "frame": {
+      "type": "expand",
+      "mode": "static",
+      "path": "frame.png",
+      "position": [0, 0],
+      "size": [608, 112],
+      "divide": [5, 6, 5, 6]
+    }
+  },
+  "textboxes": {
+    "main": {
+      "font": "default",
+      "anchor": [17, 11],
+      "max_width": 564,
+      "max_lines": 4,
+      "line_wrap": "cut"
+    }
+  }
+}

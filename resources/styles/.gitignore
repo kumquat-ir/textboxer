@@ -1,0 +1,5 @@
+# these folders will contain lots of images ripped from games, so exclude everything
+*/*
+
+# except the data folders, those are original
+!data/

@@ -1,0 +1,33 @@
+{
+  "sort": 1,
+  "predicate": "textbox:name",
+  "images": {
+    "basesize": [608, 160],
+    "frame": {
+      "position": [0, 48]
+    },
+    "frame_name": {
+      "type": "expand",
+      "mode": "textbox",
+      "textbox": "name",
+      "bind_axes": "x",
+      "path": "frame.png",
+      "position": [0, 0],
+      "size": [100, 44],
+      "sizemod": [24, 0],
+      "divide": [5, 6, 5, 6]
+    }
+  },
+  "textboxes": {
+    "main": {
+      "anchor": [17, 59]
+    },
+    "name": {
+      "font": "default",
+      "anchor": [12, 5],
+      "max_width": 564,
+      "max_lines": 1,
+      "line_wrap": "cut"
+    }
+  }
+}

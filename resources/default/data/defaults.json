@@ -1,0 +1,13 @@
+{
+  "sort": -1000,
+  "predicate": "always",
+  "fonts": {
+    "basepath": "fonts"
+  },
+  "images": {
+    "basepath": "images"
+  },
+  "textboxes": {
+
+  }
+}
