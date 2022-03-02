@@ -261,10 +261,12 @@ def parsestr(textin: str, *, out: str = None):
         key, value = argdesc.split(":")
         match key:
             case "text":
-                text[value] = args[0]
+                if args[0] != "!NONE!":
+                    text[value] = args[0]
                 del args[0]
             case "image":
-                images[value] = args[0]
+                if args[0] != "!NONE!":
+                    images[value] = args[0]
                 del args[0]
             case "textfill":
                 remaining = ""
@@ -300,10 +302,12 @@ def parsestrlist(args: list[str], *, style: str = None, text: dict[str, str] = N
         key, value = argdesc.split(":")
         match key:
             case "text":
-                text[value] = args[0]
+                if args[0] != "!NONE!":
+                    text[value] = args[0]
                 del args[0]
             case "image":
-                images[value] = args[0]
+                if args[0] != "!NONE!":
+                    images[value] = args[0]
                 del args[0]
         if len(args) <= 0:
             break
@@ -412,6 +416,39 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
     composite.show()
 
 
+def gen_help() -> str:
+    output = "Available styles: "
+    stylelist = []
+    longest_style = 0
+    default_data = resource_root / "default" / "data"
+    for style in (resource_root / "styles").iterdir():
+        if (style / "data").exists():
+            stylelist.append(style.name)
+            output += style.name + ", "
+            if len(style.name) > longest_style:
+                longest_style = len(style.name)
+    output = output[:output.rfind(", ")]
+    output += "\nDefault style: "
+    _, preload = load_jsons(list(default_data.glob("*.json")))
+    output += preload["defaultstyle"]
+    output += "\nStyle options:"
+    for style in stylelist:
+        style_data = resource_root / "styles" / style / "data"
+        _, preload = load_jsons(list(style_data.glob("*.json")))
+        output += "\n" + style.ljust(longest_style + 3)
+        for arg in preload["str"]:
+            key, value = arg.split(":")
+            match key:
+                case "text":
+                    output += " <text (1 word or quoted): " + value + ">"
+                case "image":
+                    output += " <image: " + value + ">"
+                case "textfill":
+                    output += " <text (rest of message): " + value + ">"
+    output += "\n1 word text and image parameters can be set to nothing by passing !NONE! instead of a value"
+    return output
+
+
 if __name__ == '__main__':
     debug_mode = True
     # generate("omori", {"main": "I hope you're having a great day!", "name": "MARI"}, {"face": "mari_happy"})
@@ -420,5 +457,6 @@ if __name__ == '__main__':
     # generate("omori", {"main": "i'm in your website. what will you do. おやすみ、オヤスミ。", "name": "SOMETHING"}, {"face": "something"})
     # parsestr(["The way is blocked... by blocks!"])
     # parsestrlist(["omori", "How is it march already", "BASIL", "basil_flower_stare"])
-    parsestr("omori f:scared BASIL basil_dark_flower_cry That's mean, SUNNY. That's so mean.")
+    # parsestr("omori f:scared BASIL basil_dark_flower_cry That's mean, SUNNY. That's so mean.")
     # test()
+    print(gen_help())
