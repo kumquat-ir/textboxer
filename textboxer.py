@@ -496,13 +496,48 @@ def gen_help() -> str:
     return output
 
 
+def find_aliases(stylein: str = None, search: str = "") -> str:
+    stylelist = []
+    output = ""
+
+    if stylein is None:
+        for style in (resource_root / "styles").iterdir():
+            if (style / "data").exists():
+                stylelist.append(style.name)
+    else:
+        stylelist.append(stylein)
+
+    for style in stylelist:
+        output += style
+        for aliasfilepath in (resource_root / "styles" / style).rglob("alias.json"):
+            for pathpart in aliasfilepath.relative_to(resource_root / "styles" / style).parts:
+                output += " / " + pathpart
+            output += "\n"
+            aliasfile = aliasfilepath.open()
+            aliases = json.load(aliasfile)
+            aliasfile.close()
+
+            for alias in aliases:
+                if search in alias:
+                    output += alias + "\n"
+
+    # trim trailing newline
+    output = output[:-1]
+
+    return output
+
+
 if __name__ == '__main__':
     debug_mode = True
     # generate("omori", {"main": "I hope you're having a great day!", "name": "MARI"}, {"face": "mari_happy"})
     # generate("oneshot", {"main": "mhm yep uh huh yeah got it mhm great yeah uh huh okay"}, {"face": "af"})
     # generate("omori", {"main": "I am... a gift for you... DREAMER.", "name": "ABBI"}, flags=["scared"])
-    generate("omori", {"main": "He remains the DREAMER's favorite even to this day... watching diligently... waiting for something to happen.", "name": "BRANCH CORAL"})
+    # generate("omori", {"main": "He remains the DREAMER's favorite even to this day... watching diligently... waiting for something to happen.", "name": "BRANCH CORAL"})
     # parsestrlist(["The way is blocked... by blocks!"])
     # parsestrlist(["omori", "How is it march already", "BASIL", "basil_flower_stare"])
     # parsestr("omori f:scared BASIL basil_dark_flower_cry That's mean, SUNNY. That's so mean.")
+    # generate("oneshot", {"main": "My rams clock at 1333 megaherds."}, {"face": "shepherd"})
+    # generate("omori", {"main": "Hi, OMORI! Cliff-faced as usual, I see.\nYou should totally smile more! I've always liked your smile.", "name": "MARI"}, {"face": "mari_dw_smile2"})
+    # parsestr("omori MARI mari_dw_smile2 Hi, OMORI! Cliff-faced as usual, I see.\nYou should totally smile more! I've always liked your smile.")
     # print(gen_help())
+    print(find_aliases(search="sad"))

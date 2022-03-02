@@ -1,6 +1,6 @@
 {
   "sort": 100,
-  "predicate": "flag:escape",
+  "predicate": "flag:escape&image:face",
   "images": {
     "face": {
       "position": [298, 4]
