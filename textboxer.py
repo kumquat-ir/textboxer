@@ -237,8 +237,8 @@ def create_expand(base_imagepath: Path, image_data: dict) -> Image.Image:
     return output
 
 
-def parsestr(textin: str, *, out: str = None):
-    args = textin.split(" ")
+def parsestr(textin: str, *, out: str = None, presplit: list[str] = None):
+    args = textin.split(" ") if presplit is None else presplit
     style = None
     text = {}
     images = {}
