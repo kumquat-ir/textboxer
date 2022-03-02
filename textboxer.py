@@ -432,9 +432,10 @@ def gen_help() -> str:
     _, preload = load_jsons(list(default_data.glob("*.json")))
     output += preload["defaultstyle"]
     output += "\nStyle options:"
+    flags = {}
     for style in stylelist:
         style_data = resource_root / "styles" / style / "data"
-        _, preload = load_jsons(list(style_data.glob("*.json")))
+        sorts, preload = load_jsons(list(style_data.glob("*.json")))
         output += "\n" + style.ljust(longest_style + 3)
         for arg in preload["str"]:
             key, value = arg.split(":")
@@ -445,7 +446,23 @@ def gen_help() -> str:
                     output += " <image: " + value + ">"
                 case "textfill":
                     output += " <text (rest of message): " + value + ">"
+        flags[style] = []
+        for sortvalue in sorts:
+            for data in sorts[sortvalue]:
+                for part in data["predicate"].split("&"):
+                    if part == "always":
+                        continue
+                    if part == "parse":
+                        break
+                    if part.startswith("flag"):
+                        mid = part.find(":")
+                        flags[style].append(part[mid + 1:])
     output += "\n1 word text and image parameters can be set to nothing by passing !NONE! instead of a value"
+    output += "\nAvailable flags:"
+    for style in flags:
+        output += "\n" + style.ljust(longest_style + 3)
+        for flag in flags[style]:
+            output += " " + flag
     return output
 
 
