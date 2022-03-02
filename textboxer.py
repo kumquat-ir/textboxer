@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+# Textboxer: a python script/lib for making custom textboxes that look like they are from games
+# Made by TheLastKumquat
+# Licensed under MIT
+
 import json
 import math
 
@@ -23,13 +27,15 @@ def debug(text):
 def resolve_resource(base: Path, key: str) -> Path:
     if (base / key).exists():
         return base / key
+
     if (base / "alias.json").exists():
         alias_file = (base / "alias.json").open()
         aliases = json.load(alias_file)
         alias_file.close()
         if key in aliases:
             return base / aliases[key]
-    return base
+
+    return base / key
 
 
 def paste_alpha(base: Image.Image, overlay: Image.Image, offset: tuple = (0, 0)) -> Image.Image:
@@ -50,24 +56,29 @@ def wrap_text(text: str, maxwidth: int, font: ImageFont.FreeTypeFont,
               draw: ImageDraw.ImageDraw, break_on_any: bool = False) -> str:
     textcut = text[:]
     textout = ""
+
     while len(textcut) > 0:
         textwidth = draw.multiline_textsize(textcut, font)[0]
         if textwidth < maxwidth:
             textout += textcut
             break
+
         # binary search for the longest substring that can fit in the designated width
         startpos = 0
         endpos = len(textcut)
         last_below = 0
         for i in range(0, math.floor(math.log2(len(textcut)) + 1)):
             curpos = (len(textcut[startpos:endpos]) // 2) + startpos
+            textwidth = draw.multiline_textsize(textcut[:curpos], font)[0]
+
+            # some of this debug info is just wrong and i cant be bothered to fix it, since the search works correctly
             debug("began binary search iteration " + str(i + 1) + " of " + str(math.floor(math.log2(len(textcut)) + 1))
                   + " with bounds " + str(startpos) + ":" + str(endpos)
                   + " and position " + str(curpos) + "/" + str(len(textcut) - 1))
             debug("search region: " + textcut[startpos - 1:endpos])
             debug("test region:   " + textcut[:curpos])
-            textwidth = draw.multiline_textsize(textcut[:curpos], font)[0]
             debug("found width " + str(textwidth) + " (target " + str(maxwidth) + ")")
+
             if textwidth < maxwidth:
                 startpos = curpos + 1
                 last_below = curpos
@@ -77,10 +88,13 @@ def wrap_text(text: str, maxwidth: int, font: ImageFont.FreeTypeFont,
                 debug("found exact match, broke search")
                 last_below = curpos
                 break
+
         debug("finished binary search with bounds " + str(startpos) + ":" + str(endpos)
               + " and position " + str(last_below) + "/" + str(len(textcut) - 1))
         debug("fit region: " + textcut[:last_below])
         debug("remaining:  " + textcut[last_below:])
+
+        # break at the nearest space instead of the found position, if possible
         breakpos = textcut.rfind(" ", 0, last_below + 1)
         if breakpos == -1 or break_on_any:
             textout += textcut[:last_below] + "\n"
@@ -88,6 +102,7 @@ def wrap_text(text: str, maxwidth: int, font: ImageFont.FreeTypeFont,
         else:
             textout += textcut[:breakpos] + "\n"
             textcut = textcut[breakpos + 1:]
+
     return textout
 
 
@@ -107,10 +122,12 @@ def evaluate_predicate(predicate_state: dict[str, list], predicate: str) -> bool
 def load_jsons(data_paths: list[Path]) -> (dict[int, list], dict[str, dict]):
     sorts = {}
     preloads = {}
+
     for path in data_paths:
         data_file = path.open()
         cdata: dict = json.load(data_file)
         data_file.close()
+
         debug("loading " + str(path))
         if cdata["predicate"] == "parse":
             preloads = merge_dicts(preloads, cdata)
@@ -118,6 +135,7 @@ def load_jsons(data_paths: list[Path]) -> (dict[int, list], dict[str, dict]):
         if cdata["sort"] not in sorts:
             sorts[cdata["sort"]] = []
         sorts[cdata["sort"]].append(cdata)
+
     debug(sorts)
     debug(preloads)
     return sorts, preloads
@@ -125,11 +143,13 @@ def load_jsons(data_paths: list[Path]) -> (dict[int, list], dict[str, dict]):
 
 def parse_jsons(predicate_state: dict, sorts: dict[int, list]) -> dict[str, dict]:
     output = {}
+
     for sort_value in sorted(sorts.keys()):
         debug("loading sort value " + str(sort_value))
         for data in sorts[sort_value]:
             if evaluate_predicate(predicate_state, data["predicate"]):
                 output = merge_dicts(output, data)
+
     del output["sort"]
     del output["predicate"]
     return output
@@ -141,6 +161,7 @@ def resolve_jsons(predicate_state: dict, data_paths: list[Path]) -> dict[str, di
 
 def merge_dicts(a: dict, b: dict) -> dict:
     output = {}
+
     for key in a:
         if key in b:
             if isinstance(a[key], dict) and isinstance(b[key], dict):
@@ -152,6 +173,7 @@ def merge_dicts(a: dict, b: dict) -> dict:
         else:
             debug("keep " + key)
             output[key] = deepcopy(a[key])
+
     for key in b:
         if key not in a:
             debug("append " + key)
@@ -173,6 +195,7 @@ def create_expand(base_imagepath: Path, image_data: dict) -> Image.Image:
     dtx, dty = w - rsw, h - bsh
     # size values for scalable regions
     xs, ys = (dtx - dx1), (dty - dy1)
+
     # [x1 [y1 x2) y2)
     section_bounds = {
         "tl": (0, 0, dx1, dy1),
@@ -185,6 +208,7 @@ def create_expand(base_imagepath: Path, image_data: dict) -> Image.Image:
         "bm": (dx1, dy2, dx2, my),
         "br": (dx2, dy2, mx, my)
     }
+    # x y
     section_locations = {
         "tl": (0, 0),
         "tm": (dx1, 0),
@@ -196,6 +220,7 @@ def create_expand(base_imagepath: Path, image_data: dict) -> Image.Image:
         "bm": (dx1, dty),
         "br": (dtx, dty)
     }
+    # w h
     section_sizes = {
         "tl": (dx1, dy1),
         "tm": (xs, dy1),
@@ -207,10 +232,12 @@ def create_expand(base_imagepath: Path, image_data: dict) -> Image.Image:
         "bm": (xs, bsh),
         "br": (rsw, bsh)
     }
+
     output = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     for section in section_locations:
         output.paste(base_image.resize(section_sizes[section], Image.NEAREST, section_bounds[section]),
                      section_locations[section])
+
     return output
 
 
@@ -222,6 +249,8 @@ def parsestr(textin: str, *, out: str = None, presplit: list[str] = None):
     flags = []
     default_data = resource_root / "default" / "data"
     style_root = resource_root / "styles"
+
+    # find the style to use
     if (style_root / args[0]).exists():
         style = args[0]
         del args[0]
@@ -229,11 +258,14 @@ def parsestr(textin: str, *, out: str = None, presplit: list[str] = None):
         # need to load just the default parse data to get the default style, could be cached but effort
         _, preload = load_jsons(list(default_data.glob("*.json")))
         style = preload["defaultstyle"]
+
     style_data = style_root / style / "data"
     sorts, preload = load_jsons(list(default_data.glob("*.json")) + list(style_data.glob("*.json")))
+
     while args[0].startswith("f:") or args[0].startswith("flag:"):
         flags.append(args[0][args[0].find(":") + 1:])
         del args[0]
+
     for argdesc in preload["str"]:
         key, value = argdesc.split(":")
         match key:
@@ -253,6 +285,7 @@ def parsestr(textin: str, *, out: str = None, presplit: list[str] = None):
                 args = []
         if len(args) <= 0:
             break
+
     generate(style, text, images, flags, preload_data=sorts, out=out)
 
 
@@ -266,6 +299,8 @@ def parsestrlist(args: list[str], *, style: str = None, text: dict[str, str] = N
         flags = []
     default_data = resource_root / "default" / "data"
     style_root = resource_root / "styles"
+
+    # find the style to use
     if (style_root / args[0]).exists():
         style = args[0]
         del args[0]
@@ -273,8 +308,10 @@ def parsestrlist(args: list[str], *, style: str = None, text: dict[str, str] = N
         # need to load just the default parse data to get the default style, could be cached but effort
         _, preload = load_jsons(list(default_data.glob("*.json")))
         style = preload["defaultstyle"]
+
     style_data = style_root / style / "data"
     sorts, preload = load_jsons(list(default_data.glob("*.json")) + list(style_data.glob("*.json")))
+
     for argdesc in preload["args"]:
         key, value = argdesc.split(":")
         match key:
@@ -288,8 +325,10 @@ def parsestrlist(args: list[str], *, style: str = None, text: dict[str, str] = N
                 del args[0]
         if len(args) <= 0:
             break
+
     for remaining in args:
         flags.append(remaining)
+
     generate(style, text, images, flags, preload_data=sorts, out=out)
 
 
@@ -304,6 +343,7 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
     default_data = resource_root / "default" / "data"
     style_dir = resource_root / "styles" / style
     style_data = style_dir / "data"
+
     if preload_data is not None:
         data = parse_jsons(predicate_state, preload_data)
     else:
@@ -325,6 +365,7 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
         if isinstance(data["images"][imagename], dict):
             image_data[imagename] = data["images"][imagename]
             imagepath = style_dir / data["images"]["basepath"]
+
             match image_data[imagename]["type"]:
                 case "static":
                     image_data[imagename]["resolved"] = Image.open(imagepath / image_data[imagename]["path"])
@@ -357,6 +398,7 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
             composite = image["resolved"].copy()
             continue
         composite = paste_alpha(composite, image["resolved"], image["position"])
+
     canvas = ImageDraw.Draw(composite)
     default_fontmode = canvas.fontmode
     for textboxname in data["textboxes"]:
@@ -367,9 +409,11 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
             if not font["antialias"]:
                 canvas.fontmode = "1"
             text_wrapped = wrap_text(text[textboxname], textbox["max_width"], font["resolved"], canvas)
+
             lines = text_wrapped.count("\n") + 1
             if lines > textbox["max_lines"] and textbox["line_wrap"] == "cut":
                 text_wrapped = text_wrapped[:find_nth(text_wrapped, "\n", textbox["max_lines"])]
+
             if textboxname in deferred_images:
                 tx1, ty1, tx2, ty2 = canvas.multiline_textbbox(textbox["anchor"],
                                                                text_wrapped,
@@ -383,10 +427,12 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
                     image["size"][1] = th + image["sizemod"][1]
                 composite = paste_alpha(composite, create_expand(image["path_resolved"], image), image["position"])
                 canvas = ImageDraw.Draw(composite)
+
             canvas.multiline_text(textbox["anchor"],
                                   text_wrapped,
                                   spacing=font["spacing"],
                                   font=font["resolved"])
+
     if out is not None:
         composite.save(out)
         return
@@ -398,6 +444,7 @@ def gen_help() -> str:
     stylelist = []
     longest_style = 0
     default_data = resource_root / "default" / "data"
+
     for style in (resource_root / "styles").iterdir():
         if (style / "data").exists():
             stylelist.append(style.name)
@@ -405,9 +452,11 @@ def gen_help() -> str:
             if len(style.name) > longest_style:
                 longest_style = len(style.name)
     output = output[:output.rfind(", ")]
+
     output += "\nDefault style: "
     _, preload = load_jsons(list(default_data.glob("*.json")))
     output += preload["defaultstyle"]
+
     output += "\nStyle options:"
     flags = {}
     for style in stylelist:
@@ -423,6 +472,7 @@ def gen_help() -> str:
                     output += " <image: " + value + ">"
                 case "textfill":
                     output += " <text (rest of message): " + value + ">"
+
         flags[style] = []
         for sortvalue in sorts:
             for data in sorts[sortvalue]:
@@ -434,12 +484,15 @@ def gen_help() -> str:
                     if part.startswith("flag"):
                         mid = part.find(":")
                         flags[style].append(part[mid + 1:])
+
     output += "\n1 word text and image parameters can be set to nothing by passing !NONE! instead of a value"
+
     output += "\nAvailable flags:"
     for style in flags:
         output += "\n" + style.ljust(longest_style + 3)
         for flag in flags[style]:
             output += " " + flag
+
     return output
 
 
@@ -449,8 +502,7 @@ if __name__ == '__main__':
     # generate("oneshot", {"main": "mhm yep uh huh yeah got it mhm great yeah uh huh okay"}, {"face": "af"})
     # generate("omori", {"main": "I am... a gift for you... DREAMER.", "name": "ABBI"}, flags=["scared"])
     generate("omori", {"main": "He remains the DREAMER's favorite even to this day... watching diligently... waiting for something to happen.", "name": "BRANCH CORAL"})
-    # parsestr(["The way is blocked... by blocks!"])
+    # parsestrlist(["The way is blocked... by blocks!"])
     # parsestrlist(["omori", "How is it march already", "BASIL", "basil_flower_stare"])
     # parsestr("omori f:scared BASIL basil_dark_flower_cry That's mean, SUNNY. That's so mean.")
-    # test()
     # print(gen_help())
