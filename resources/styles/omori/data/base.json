@@ -6,13 +6,13 @@
       "path": "OMORI_GAME2.ttf",
       "size": 28,
       "antialias": true,
-      "spacing": 4
+      "spacing": 6
     },
     "scared": {
       "path": "OMORI_GAME.ttf",
       "size": 28,
       "antialias": true,
-      "spacing": 4
+      "spacing": 6
     }
   },
   "images": {
@@ -30,7 +30,7 @@
       "font": "default",
       "anchor": [17, 11],
       "max_width": 564,
-      "max_lines": 4,
+      "max_lines": 3,
       "line_wrap": "cut"
     }
   }

@@ -91,29 +91,6 @@ def wrap_text(text: str, maxwidth: int, font: ImageFont.FreeTypeFont,
     return textout
 
 
-def test():
-    metaf = open("resources/styles/oneshot/meta.json")
-    meta = json.load(metaf)
-    metaf.close()
-    facex, facey = meta["face"]["x"], meta["face"]["y"]
-    frame = Image.open("resources/styles/oneshot/frame.png")
-    face = Image.open("resources/styles/oneshot/face.png")
-    fontf = open("resources/styles/oneshot/font.ttf", 'rb')
-    font = ImageFont.truetype(fontf, meta["font"]["size"])
-    fontf.close()
-    composite = paste_alpha(frame, face, (facex, facey))
-    canvas = ImageDraw.Draw(composite)
-    if not meta["text"]["main"]["antialias"]:
-        canvas.fontmode = "1"
-    text = "(oh goodness gracious I'm stuck in an elevator with the messiah and also literally god themself this is awkward)"
-    canvas.multiline_text((meta["text"]["main"]["anchor_x"], meta["text"]["main"]["anchor_y"]),
-                          wrap_text(text, meta["text"]["main"]["max_width"], font, canvas),
-                          spacing=meta["text"]["main"]["spacing"], font=font)
-    # print(wrap_text("(oh goodness gracious I'm stuck in an elevator with the messiah and also literally god themself this is awkward)", 460, font, canvas))
-    # print(canvas.textlength("(oh goodness gracious I'm stuck in an elevator", font))
-    composite.show()
-
-
 def evaluate_predicate(predicate_state: dict[str, list], predicate: str) -> bool:
     for part in predicate.split("&"):
         if part == "always":
@@ -469,9 +446,9 @@ def gen_help() -> str:
 if __name__ == '__main__':
     debug_mode = True
     # generate("omori", {"main": "I hope you're having a great day!", "name": "MARI"}, {"face": "mari_happy"})
-    generate("oneshot", {"main": "mhm yep uh huh yeah got it mhm great yeah uh huh okay"}, {"face": "af"})
+    # generate("oneshot", {"main": "mhm yep uh huh yeah got it mhm great yeah uh huh okay"}, {"face": "af"})
     # generate("omori", {"main": "I am... a gift for you... DREAMER.", "name": "ABBI"}, flags=["scared"])
-    # generate("omori", {"main": "i'm in your website. what will you do. おやすみ、オヤスミ。", "name": "SOMETHING"}, {"face": "something"})
+    generate("omori", {"main": "He remains the DREAMER's favorite even to this day... watching diligently... waiting for something to happen.", "name": "BRANCH CORAL"})
     # parsestr(["The way is blocked... by blocks!"])
     # parsestrlist(["omori", "How is it march already", "BASIL", "basil_flower_stare"])
     # parsestr("omori f:scared BASIL basil_dark_flower_cry That's mean, SUNNY. That's so mean.")
