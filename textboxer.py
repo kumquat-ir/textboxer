@@ -66,7 +66,7 @@ def wrap_text(text: str, maxwidth: int, font: ImageFont.FreeTypeFont,
                   + " and position " + str(curpos) + "/" + str(len(textcut) - 1))
             debug("search region: " + textcut[startpos - 1:endpos])
             debug("test region:   " + textcut[:curpos])
-            textwidth = draw.textlength(textcut[:curpos], font)
+            textwidth = draw.multiline_textsize(textcut[:curpos], font)[0]
             debug("found width " + str(textwidth) + " (target " + str(maxwidth) + ")")
             if textwidth < maxwidth:
                 startpos = curpos + 1
@@ -469,11 +469,11 @@ def gen_help() -> str:
 if __name__ == '__main__':
     debug_mode = True
     # generate("omori", {"main": "I hope you're having a great day!", "name": "MARI"}, {"face": "mari_happy"})
-    # generate("oneshot", {"main": "mhm yep uh huh yeah got it mhm great yeah uh huh okay"}, {"face": "af"})
+    generate("oneshot", {"main": "mhm yep uh huh yeah got it mhm great yeah uh huh okay"}, {"face": "af"})
     # generate("omori", {"main": "I am... a gift for you... DREAMER.", "name": "ABBI"}, flags=["scared"])
     # generate("omori", {"main": "i'm in your website. what will you do. おやすみ、オヤスミ。", "name": "SOMETHING"}, {"face": "something"})
     # parsestr(["The way is blocked... by blocks!"])
     # parsestrlist(["omori", "How is it march already", "BASIL", "basil_flower_stare"])
     # parsestr("omori f:scared BASIL basil_dark_flower_cry That's mean, SUNNY. That's so mean.")
     # test()
-    print(gen_help())
+    # print(gen_help())
