@@ -51,7 +51,7 @@ def wrap_text(text: str, maxwidth: int, font: ImageFont.FreeTypeFont,
     textcut = text[:]
     textout = ""
     while len(textcut) > 0:
-        textwidth = draw.textlength(textcut, font)
+        textwidth = draw.multiline_textsize(textcut, font)[0]
         if textwidth < maxwidth:
             textout += textcut
             break
