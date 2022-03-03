@@ -24,10 +24,7 @@ def debug(text):
         print(text)
 
 
-def resolve_resource(base: Path, key: str) -> Path:
-    if (base / key).exists():
-        return base / key
-
+def resolve_resource(base: Path, key: str) -> Path | None:
     if (base / "alias.json").exists():
         alias_file = (base / "alias.json").open()
         aliases = json.load(alias_file)
@@ -35,7 +32,7 @@ def resolve_resource(base: Path, key: str) -> Path:
         if key in aliases:
             return base / aliases[key]
 
-    return base / key
+    return None
 
 
 def paste_alpha(base: Image.Image, overlay: Image.Image, offset: tuple = (0, 0)) -> Image.Image:
@@ -527,6 +524,13 @@ def find_aliases(stylein: str = None, search: str = "") -> str:
     return output
 
 
+def get_image(style: str, image: str) -> Path | None:
+    for aliasfilepath in (resource_root / "styles" / style).rglob("alias.json"):
+        if resolved := resolve_resource(aliasfilepath.parent, image):
+            return resolved
+    return None
+
+
 if __name__ == '__main__':
     debug_mode = True
     # generate("omori", {"main": "I hope you're having a great day!", "name": "MARI"}, {"face": "mari_happy"})
@@ -540,4 +544,5 @@ if __name__ == '__main__':
     # generate("omori", {"main": "Hi, OMORI! Cliff-faced as usual, I see.\nYou should totally smile more! I've always liked your smile.", "name": "MARI"}, {"face": "mari_dw_smile2"})
     # parsestr("omori MARI mari_dw_smile2 Hi, OMORI! Cliff-faced as usual, I see.\nYou should totally smile more! I've always liked your smile.")
     # print(gen_help())
-    print(find_aliases(search="sad"))
+    # print(find_aliases(search="sad"))
+    print(get_image("oneshot", "af"))
