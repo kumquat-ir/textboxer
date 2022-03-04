@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Textboxer: a python script/lib for making custom textboxes that look like they are from games
 # Made by TheLastKumquat
@@ -16,7 +16,7 @@ from PIL import ImageFont
 from pathlib import Path
 
 debug_mode = False
-resource_root = Path("resources")
+resource_root: Path = Path("resources")
 
 
 def debug(text):
@@ -352,9 +352,14 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
     for fontname in data["fonts"]:
         if isinstance(data["fonts"][fontname], dict):
             font_data[fontname] = data["fonts"][fontname]
-            fontfile = (style_dir / data["fonts"]["basepath"] / font_data[fontname]["path"]).open("rb")
-            font_data[fontname]["resolved"] = ImageFont.truetype(fontfile, font_data[fontname]["size"])
-            fontfile.close()
+            if "bitmap" in font_data[fontname]:
+                font_data[fontname]["resolved"] = ImageFont.load(
+                    style_dir / data["fonts"]["basepath"] / font_data[fontname]["bitmap"]
+                )
+            else:
+                fontfile = (style_dir / data["fonts"]["basepath"] / font_data[fontname]["path"]).open("rb")
+                font_data[fontname]["resolved"] = ImageFont.truetype(fontfile, font_data[fontname]["size"])
+                fontfile.close()
 
     image_data = {}
     deferred_images = {}
@@ -368,8 +373,7 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
                     image_data[imagename]["resolved"] = Image.open(imagepath / image_data[imagename]["path"])
                 case "dynamic":
                     image_data[imagename]["resolved"] = Image.open(
-                        resolve_resource(imagepath / image_data[imagename]["pathprefix"],
-                                         images[image_data[imagename]["key"]])
+                        resolve_resource(imagepath / image_data[imagename]["pathprefix"], images[imagename])
                     )
                 case "expand":
                     # image divided into 9 regions, corners stay static
@@ -403,6 +407,9 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
             canvas.fontmode = default_fontmode
             textbox = data["textboxes"][textboxname]
             font = font_data[textbox["font"]]
+            fill = tuple(textbox["color"]) if "color" in textbox else None
+            if "inherittext" in textbox:
+                text[textboxname] = text[textbox["inherittext"]]
             if not font["antialias"]:
                 canvas.fontmode = "1"
             text_wrapped = wrap_text(text[textboxname], textbox["max_width"], font["resolved"], canvas)
@@ -428,7 +435,8 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
             canvas.multiline_text(textbox["anchor"],
                                   text_wrapped,
                                   spacing=font["spacing"],
-                                  font=font["resolved"])
+                                  font=font["resolved"],
+                                  fill=fill)
 
     if out is not None:
         composite.save(out)
@@ -534,7 +542,7 @@ def get_image(style: str, image: str) -> Path | None:
 if __name__ == '__main__':
     debug_mode = True
     # generate("omori", {"main": "I hope you're having a great day!", "name": "MARI"}, {"face": "mari_happy"})
-    # generate("oneshot", {"main": "mhm yep uh huh yeah got it mhm great yeah uh huh okay"}, {"face": "af"})
+    generate("oneshot", {"main": "mhm yep uh huh yeah got it mhm great yeah uh huh okay"}, {"face": "af"})
     # generate("omori", {"main": "I am... a gift for you... DREAMER.", "name": "ABBI"}, flags=["scared"])
     # generate("omori", {"main": "He remains the DREAMER's favorite even to this day... watching diligently... waiting for something to happen.", "name": "BRANCH CORAL"})
     # parsestrlist(["The way is blocked... by blocks!"])
@@ -545,4 +553,4 @@ if __name__ == '__main__':
     # parsestr("omori MARI mari_dw_smile2 Hi, OMORI! Cliff-faced as usual, I see.\nYou should totally smile more! I've always liked your smile.")
     # print(gen_help())
     # print(find_aliases(search="sad"))
-    print(get_image("oneshot", "af"))
+    # print(get_image("oneshot", "af"))

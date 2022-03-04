@@ -4,7 +4,6 @@
   "images": {
     "face": {
       "type": "dynamic",
-      "key": "face",
       "pathprefix": "faces",
       "position": [496, 16]
     }
