@@ -1,0 +1,3 @@
+[submodule "utils/ccmono"]
+	path = utils/ccmono
+	url = https://github.com/yyny/ccmono.git
