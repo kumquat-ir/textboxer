@@ -1,0 +1,27 @@
+{
+  // Parse-time data does not need a sorting value!
+  // There should be exactly one default parse data file, and exactly one in each style.
+
+  // Required predicate for data to be loaded at parse-time
+  // string: "parse"
+  "predicate": "parse",
+
+  // The default style to use if one is not found.
+  // Only useful in the default data, not in style data
+  // string: name of the default style
+  "defaultstyle": "style1",
+
+  // How string input should be parsed
+  // Preferably should be placed in style data
+  // If this is not present in default or style data, parsestr() cannot be used!
+  // Each value is a type and a name, separated by a colon
+  // Valid types:
+  //    text      Passes a single word to the textbox with the specified name
+  //    image     Passes a single word to the image with the specified name
+  //    textfill  Passes all remaining text in the input to the textbox with the specified name.
+  //              All values afterwards will be ignored!
+  // If the kwarg "presplit" (list[str]) is passed to parsestr(), list elements will be used instead of words.
+  // This allows for multi-word inputs to text and image, and should be considered in your UI design.
+  // array[string...]: list of input consumer descriptors
+  "str": ["text:name", "image:face", "textfill:main"]
+}

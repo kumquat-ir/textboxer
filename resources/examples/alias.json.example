@@ -1,0 +1,10 @@
+{
+  // alias.json specifies the mapping of image names to image files in the directory it is contained in.
+  // All paths are relative to the directory this file is in.
+
+  // The key is the name the user would input, and the value is the path to the image.
+  // So inputting "image1" and "also-image-1" will yield the same image, but "image2" will not.
+  "image1": "path/to/image1",
+  "also-image-1": "path/to/image1",
+  "image2": "path/to/image2"
+}

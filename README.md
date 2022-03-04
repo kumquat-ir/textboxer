@@ -7,7 +7,7 @@ Pillow
 
 Image and font files from the appropriate game are *required* for it to work, and are not included in this repository.  
 Each game "style" also requires some metadata files specifying the layout, example ones for [OMORI](resources/styles/omori/data) and [Oneshot](resources/styles/oneshot/data) are included.  
-(Example/reference style coming soon™)
+Data format reference can be found in [the examples directory](resources/examples).
 
 ## Invoking
 Textboxes can be created by either using `generate()`, which gives the most flexibility, or `parsestr()`, which is less flexible but more appropriate for something like a Discord bot.  

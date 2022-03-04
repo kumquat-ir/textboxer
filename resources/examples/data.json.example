@@ -1,0 +1,307 @@
+{
+  // The sorting value of this data file. Higher numbers will be loaded later.
+  // All data files are merged into one, which leads to:
+  //  * Overlapping values getting overwritten
+  //  * Overlapping objects ( {}s ) getting merged
+  //  * Objects/values from later files being appended
+  // Order is preserved, so values from files loaded later will always be after those from files loaded earlier.
+  // int: sorting value
+  "sort": 0,
+
+  // Under what conditions this file should actually be loaded.
+  // This value can consist of multiple predicates, separated by &
+  // The whole thing will evaluate to True only if each part evaluates to True
+  // (e.g. "textbox:name&image:face" will be True only if both "textbox:name" and "image:face" are true)
+  // All current predicates:
+  //    always        Always true.
+  //    parse         Specifies this file as a parse-time data file.
+  //                  Always false during normal data parsing, since parse-time data does not matter at this time.
+  //                  See parse.json.example
+  //    textbox:name  True if text for the textbox "name" has been provided.
+  //    image:name    True if an image name for the image "name" has been provided.
+  //    flag:name     True if the flag "name" has been set.
+  // string: the loading predicate for this file
+  "predicate": "always",
+
+  // Data for available fonts should be placed inside this object.
+  // object
+  "fonts": {
+
+    // The directory to look for fonts in, relative to the style directory.
+    // string: path to directory with fonts
+    "basepath": "fonts",
+
+    // Defines a font that can be used.
+    // The name of the font is the name of this object, in this case, it is "font1".
+    // object: a font
+    "font1": {
+
+      // This is an example of a normal font.
+
+      // The path to the font file, relative to the font directory specified by basepath
+      // Must be either TTF or OTF
+      // string: path to font file
+      "path": "font1.ttf",
+
+      // The font size to use.
+      // int: font size
+      "size": 24,
+
+      // Whether to antialias the font.
+      // Setting this to false will make the font appear pixelated.
+      // bool: whether to use antialiasing
+      "antialias": true,
+
+      // The spacing between lines of text, in pixels.
+      // int: line spacing
+      "spacing": 4
+    },
+
+    "font2": {
+
+      // This is an example of a bitmap font.
+
+      // The path to the bitmap font file, relative to the font directory specified by basepath
+      // Must be in Pillow's special bitmap font format
+      // See utils/imagetofont.py for a tool to convert images to this format.
+      // string: path to font file
+      "bitmap": "font2.pil",
+
+      // This does nothing for bitmap fonts, but is currently required for all fonts.
+      // bool: ignored
+      "antialias": false,
+
+      // The spacing between lines of text, in pixels.
+      // int: line spacing
+      "spacing": 4
+    }
+  },
+
+  // Data for images to be drawn should be placed inside this object.
+  // object
+  "images": {
+    // The directory to look for images in, relative to the style directory.
+    // string: path to directory with images
+    "basepath": "images",
+
+    // The size of the composite image to be created.
+    // This is completely optional, the size of the composite defaults to the size of the first drawn image.
+    // optional array[int, int]: the width and height of the final image
+    "basesize": [400, 200],
+
+    // Defines an image to be drawn.
+    // The name of the image is the name of this object, in this case, it is "image1".
+    // object: an image
+    "image1": {
+
+      // This is an example of a static image.
+
+      // The type of this image. Valid types are "static", "dynamic", and "expand".
+      // "dynamic" and "expand" will be explained in later image blocks.
+      // "static" means this is an image that will always be the same.
+      // string: type of image
+      "type": "static",
+
+      // The path to the image file to use, relative to the image directory specified by basepath.
+      // Can be in any format that Pillow can read, which includes .png, .jpg, .bmp, and many others.
+      // string: path to image file
+      "path": "image1.png",
+
+      // The position of this image within the composite image.
+      // 0, 0 is the top-left corner
+      // array[int, int]: position of image
+      "position": [0, 0]
+    },
+
+    "image2": {
+
+      // This is an example of a dynamic image.
+
+      // The type of this image. Valid types are "static", "dynamic", and "expand".
+      // "dynamic" means that this image will be different depending on what the user inputs.
+      // The path to the image is determined by the parameter "images" of generate(), as follows:
+      //  * The name of the image is taken, in this case, "image2".
+      //  * The value of images["image2"] is taken, which is user input for which image to use.
+      //  * The directory specified by basepath and pathprefix (below) is checked for the file "alias.json"
+      //    (see alias.json.example)
+      //  * The user inputted name is looked up in alias.json, returning the path to the image to use.
+      // string: type of image
+      "type": "dynamic",
+
+      // A subdirectory of the directory specified by basepath, which will be searched for images
+      // string: path to subdirectory of basepath
+      "pathprefix": "images-two",
+
+      // The position of this image within the composite image.
+      // 0, 0 is the top-left corner
+      // array[int, int]: position of image
+      "position": [100, 100]
+    },
+
+    "image3": {
+
+      // This is an example of a normal expand image.
+
+      // The type of this image. Valid types are "static", "dynamic", and "expand".
+      // "expand" means that this image will be expanded to fit a given size.
+      // How this works:
+      //  * The image is divided into 9 sections based on the value of "divide" below.
+      //  * The corner sections are repositioned to the where they should be for the final image size.
+      //  * The edge and center sections are stretched to make the image the correct size
+      // string: type of image
+      "type": "expand",
+
+      // The type of expand to use. Valid types are "static" and "textbox".
+      // "textbox" is explained in the next example image.
+      // "static" means the resulting image will always be the same.
+      // string: type of expand
+      "mode": "static",
+
+      // The path to the base image to expand, relative to the image directory specified by basepath.
+      // string: path to image file
+      "path": "black.png",
+
+      // The position of this image within the composite image.
+      // 0, 0 is the top-left corner
+      // array[int, int]: position of image
+      "position": [100, 0],
+
+      // The target size of the image, the base image will be expanded to fit this size.
+      // array[int, int]: width and height of image
+      "size": [50, 50],
+
+      // The positions of the dividing lines within the image, zero-indexed.
+      // These are specified as x1, x2, y1, y2
+      // The numbers specify the first pixel that will be part of the section to the left or below the line
+      // array[int, int, int, int]: positions of division lines.
+      "divide": [20, 40, 20, 40]
+    },
+
+    "image4": {
+
+      // This is an example of a textbox-bound expand image.
+
+      // The type of this image. Valid types are "static", "dynamic", and "expand".
+      // "expand" means that this image will be expanded to fit a given size.
+      // string: type of image
+      "type": "expand",
+
+      // The type of expand to use. Valid types are "static" and "textbox".
+      // "textbox" means the image will be expanded to fit a certain textbox.
+      // string: type of expand
+      "mode": "textbox",
+
+      // The name of the textbox to fit to
+      // string: name of textbox
+      "textbox": "name",
+
+      // Which axes to bind the size to.
+      // Can be "x", "y", or "xy" for both.
+      // The default size will be used for unbound axes, in this case the y axis.
+      // string: axes to bind
+      "bind_axes": "x",
+
+      // The path to the base image to expand, relative to the image directory specified by basepath.
+      // string: path to image file
+      "path": "expand.png",
+
+      // The position of this image within the composite image.
+      // 0, 0 is the top-left corner
+      // array[int, int]: position of image
+      "position": [0, 100],
+
+      // The default size of the image.
+      // This value will be ignored for the axes bound to the textbox
+      // Since only the x-axis is bound in this image, the 100 width will be ignored and the height will be set to 50.
+      // array[int, int]: default size of image
+      "size": [100, 50],
+
+      // Values to add to the width or height of the text.
+      // For example, if the width of the text in the bound textbox is 80, the final width of this image would be 100.
+      // array[int, int]: adjustments to text size
+      "sizemod": [24, 0],
+
+      // The positions of the dividing lines within the image, zero-indexed.
+      // These are specified as x1, x2, y1, y2
+      // The numbers specify the first pixel that will be part of the section to the left or below the line
+      // array[int, int, int, int]: positions of division lines.
+      "divide": [5, 6, 5, 6]
+    }
+  },
+
+  // Data for textboxes to be drawn should be placed inside this object.
+  // object
+  "textboxes": {
+
+    // Defines a textbox to be drawn
+    // The name of the textbox is the name of this object, in this case, it is "text1".
+    // object: a textbox
+    "text1": {
+
+      // This is an example of a normal textbox.
+      // Text is taken from the parameter "text" of generate(), as follows:
+      //  * The name of the textbox is taken, in this case, "text1".
+      //  * The value of text["text1"] is taken, which is user input for what text to put in the textbox.
+
+      // The name of the font to use for this textbox.
+      // string: name of a previously-defined font
+      "font": "default",
+
+      // The position of the text's anchor point.
+      // 0, 0 is the top left corner.
+      // array[int, int]: position of the text
+      "anchor": [20, 17],
+
+      // The maximum width, in pixels, that text in this textbox can be without being wrapped to the next line.
+      // int: max text width
+      "max_width": 564,
+
+      // The maximum number of lines in this textbox.
+      // int: max text lines
+      "max_lines": 4,
+
+      // What to do with lines exceeding the maximum number.
+      // "cut" removes any lines after the maximum
+      // Anything else will essentially ignore the maximum
+      // string: line overflow behavior
+      "line_wrap": "cut",
+
+      // What color the text should be.
+      // This is either RGB or RGBA
+      // Optional, defaults to full-opacity white
+      // optional array
+      "color": [0, 255, 0]
+    },
+
+    "text2": {
+
+      // This is an example of a text-inheriting textbox.
+      // It uses the same text as another textbox.
+
+      // The name of the font to use for this textbox.
+      // string: name of a previously-defined font
+      "font": "default",
+
+      // The name of the textbox to take text from.
+      // string: name of another textbox
+      "inherittext": "text1",
+
+      // The position of the text's anchor point.
+      // 0, 0 is the top left corner.
+      // array[int, int]: position of the text
+      "anchor": [20, 17],
+
+      // The maximum width, in pixels, that text in this textbox can be without being wrapped to the next line.
+      // int: max text width
+      "max_width": 564,
+
+      // The maximum number of lines in this textbox.
+      // int: max text lines
+      "max_lines": 4,
+
+      // What to do with lines exceeding the maximum number.
+      // string: line overflow behavior
+      "line_wrap": "cut"
+    }
+  }
+}
