@@ -19,7 +19,7 @@ temppath = Path("utils/temp").resolve()
 
 if len(sys.argv) < 2:
     print("Usage: imagetofont.py <input image> [arguments for bmp2pcf...]")
-    print("bmp2pcf arguments:")
+    print("bmp2pcf help (Don't worry about infile and outfile, just the options):")
     subprocess.run(["lua", bmp2pcf], cwd=bmp2pcf.parent)
     sys.exit(1)
 
