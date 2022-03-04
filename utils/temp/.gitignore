@@ -1,0 +1,5 @@
+# temporary files from util scripts
+*
+
+# but make sure to track this directory
+!.gitignore
