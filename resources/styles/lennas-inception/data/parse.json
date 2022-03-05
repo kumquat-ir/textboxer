@@ -1,0 +1,4 @@
+{
+  "predicate": "parse",
+  "str": ["text:name", "image:sprite", "textfill:main"]
+}

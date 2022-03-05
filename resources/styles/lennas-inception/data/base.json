@@ -1,0 +1,79 @@
+{
+  "sort": 0,
+  "predicate": "always",
+  "fonts": {
+    "bold": {
+      "bitmap": "bold.pil",
+      "antialias": false,
+      "spacing": 0
+    },
+    "boss": {
+      "bitmap": "boss.pil",
+      "antialias": false,
+      "spacing": 0
+    },
+    "creepy": {
+      "bitmap": "creepy.pil",
+      "antialias": false,
+      "spacing": 0
+    },
+    "default": {
+      "bitmap": "default.pil",
+      "antialias": false,
+      "spacing": 0
+    },
+    "gothiccaps": {
+      "bitmap": "gothiccaps.pil",
+      "antialias": false,
+      "spacing": 0
+    },
+    "outlined": {
+      "bitmap": "outlined.pil",
+      "antialias": false,
+      "spacing": 0
+    },
+    "smallcaps": {
+      "bitmap": "smallcaps.pil",
+      "antialias": false,
+      "spacing": 0
+    }
+  },
+  "images": {
+    "frame": {
+      "type": "expand",
+      "mode": "static",
+      "path": "dialogue.png",
+      "position": [0, 0],
+      "size": [304, 48],
+      "divide": [8, 16, 8, 16]
+    }
+  },
+  "textboxes": {
+    "main-shadow1": {
+      "font": "default",
+      "inherittext": "main",
+      "anchor": [8, 11],
+      "max_width": 290,
+      "max_lines": 2,
+      "line_wrap": "cut",
+      "color": [8, 8, 8]
+    },
+    "main-shadow2": {
+      "font": "default",
+      "inherittext": "main",
+      "anchor": [9, 11],
+      "max_width": 290,
+      "max_lines": 2,
+      "line_wrap": "cut",
+      "color": [8, 8, 8]
+    },
+    "main": {
+      "font": "default",
+      "anchor": [8, 10],
+      "max_width": 290,
+      "max_lines": 2,
+      "line_wrap": "cut",
+      "color": [230, 223, 206]
+    }
+  }
+}

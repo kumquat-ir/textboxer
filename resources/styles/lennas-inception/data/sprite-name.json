@@ -1,0 +1,27 @@
+{
+  "sort": 3,
+  "predicate": "image:sprite&textbox:name",
+  "textboxes": {
+    "main-shadow1": {
+      "anchor": [48, 27],
+      "max_width": 250
+    },
+    "main-shadow2": {
+      "anchor": [49, 27],
+      "max_width": 250
+    },
+    "main": {
+      "anchor": [48, 26],
+      "max_width": 250
+    },
+    "name-shadow1": {
+      "anchor": [48, 5]
+    },
+    "name-shadow2": {
+      "anchor": [49, 5]
+    },
+    "name": {
+      "anchor": [48, 4]
+    }
+  }
+}

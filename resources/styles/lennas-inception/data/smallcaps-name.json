@@ -1,0 +1,15 @@
+{
+  "sort": 100,
+  "predicate": "flag:smallcaps&textbox:name",
+  "textboxes": {
+    "name-shadow1": {
+      "font": "smallcaps"
+    },
+    "name-shadow2": {
+      "font": "smallcaps"
+    },
+    "name": {
+      "font": "smallcaps"
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "sort": 1,
+  "predicate": "textbox:name",
+  "images": {
+    "basesize": [304, 64],
+    "frame": {
+      "position": [0, 16]
+    },
+    "nameframe": {
+      "type": "expand",
+      "mode": "textbox",
+      "textbox": "name",
+      "bind_axes": "x",
+      "path": "dialogue-nametag.png",
+      "position": [0, 0],
+      "size": [100, 20],
+      "sizemod": [72, 0],
+      "divide": [8, 16, 8, 16]
+    }
+  },
+  "textboxes": {
+    "main-shadow1": {
+      "anchor": [8, 27]
+    },
+    "main-shadow2": {
+      "anchor": [9, 27]
+    },
+    "main": {
+      "anchor": [8, 26]
+    },
+    "name-shadow1": {
+      "font": "default",
+      "inherittext": "name",
+      "anchor": [28, 5],
+      "max_width": 300,
+      "max_lines": 1,
+      "line_wrap": "cut",
+      "color": [8, 8, 8]
+    },
+    "name-shadow2": {
+      "font": "default",
+      "inherittext": "name",
+      "anchor": [29, 5],
+      "max_width": 300,
+      "max_lines": 1,
+      "line_wrap": "cut",
+      "color": [8, 8, 8]
+    },
+    "name": {
+      "font": "default",
+      "anchor": [28, 4],
+      "max_width": 300,
+      "max_lines": 1,
+      "line_wrap": "cut",
+      "color": [115, 133, 164]
+    }
+  }
+}

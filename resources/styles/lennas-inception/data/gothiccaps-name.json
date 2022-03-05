@@ -1,0 +1,15 @@
+{
+  "sort": 100,
+  "predicate": "flag:gothicname&textbox:name",
+  "textboxes": {
+    "name-shadow1": {
+      "font": "gothiccaps"
+    },
+    "name-shadow2": {
+      "font": "gothiccaps"
+    },
+    "name": {
+      "font": "gothiccaps"
+    }
+  }
+}

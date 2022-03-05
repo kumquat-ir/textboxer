@@ -564,7 +564,7 @@ def gen_help() -> str:
                 case "textfill":
                     output += " <text (rest of message): " + value + ">"
 
-        flags[style] = []
+        flags[style] = set()
         for sortvalue in sorts:
             for data in sorts[sortvalue]:
                 for part in data["predicate"].split("&"):
@@ -574,7 +574,7 @@ def gen_help() -> str:
                         break
                     if part.startswith("flag"):
                         mid = part.find(":")
-                        flags[style].append(part[mid + 1:])
+                        flags[style].add(part[mid + 1:])
 
     output += "\n1 word text and image parameters can be set to nothing by passing !NONE! instead of a value"
 
@@ -583,6 +583,8 @@ def gen_help() -> str:
         output += "\n" + style.ljust(longest_style + 3)
         for flag in flags[style]:
             output += " " + flag
+        if len(flags[style]) == 0:
+            output += " (no flags)"
 
     return output
 
@@ -638,8 +640,8 @@ if __name__ == '__main__':
     # generate("omori", {"main": "Hi, OMORI! Cliff-faced as usual, I see.\nYou should totally smile more! I've always liked your smile.", "name": "MARI"}, {"face": "mari_dw_smile2"})
     # parsestr("omori MARI mari_dw_smile2 Hi, OMORI! Cliff-faced as usual, I see.\nYou should totally smile more! I've always liked your smile.")
     # generate("lennas-inception", {"main": "town. If you're needin' to upgrade ya arsenal, I'm ya bear!", "name": "Rupert"})
-    # parsestr("lennas-inception Lenna lenna1 Hmm? I'm not going to need this.")
-    parsestr("lennas-inception f:smallcaps Telephone misc-default 1 file attachment(s). Open attachment?")
+    parsestr("", presplit=["lennas-inception", "f:gothicname", "Archangel Lenna", "archangellenna", "Come out and show yourself, coward!"])
+    # parsestr("lennas-inception f:smallcaps Telephone misc-default 1 file attachment(s). Open attachment?")
     # print(gen_help())
     # print(find_aliases(search="sad"))
     # print(get_image("oneshot", "af"))

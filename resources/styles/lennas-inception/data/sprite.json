@@ -1,0 +1,25 @@
+{
+  "sort": 2,
+  "predicate": "image:sprite",
+  "images": {
+    "sprite": {
+      "type": "dynamic",
+      "pathprefix": "sprites",
+      "position": [0, 0]
+    }
+  },
+  "textboxes": {
+    "main-shadow1": {
+      "anchor": [48, 11],
+      "max_width": 250
+    },
+    "main-shadow2": {
+      "anchor": [49, 11],
+      "max_width": 250
+    },
+    "main": {
+      "anchor": [48, 10],
+      "max_width": 250
+    }
+  }
+}
