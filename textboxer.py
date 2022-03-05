@@ -419,11 +419,9 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
                 text_wrapped = text_wrapped[:find_nth(text_wrapped, "\n", textbox["max_lines"])]
 
             if textboxname in deferred_images:
-                tx1, ty1, tx2, ty2 = canvas.multiline_textbbox(textbox["anchor"],
-                                                               text_wrapped,
-                                                               spacing=font["spacing"],
-                                                               font=font["resolved"])
-                tw, th = tx2 - tx1, ty2 - ty1
+                tw, th = canvas.multiline_textsize(text_wrapped,
+                                                   spacing=font["spacing"],
+                                                   font=font["resolved"])
                 image = deferred_images[textboxname]
                 if "x" in image["bind_axes"]:
                     image["size"][0] = tw + image["sizemod"][0]
