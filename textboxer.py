@@ -156,6 +156,16 @@ def resolve_jsons(predicate_state: dict, data_paths: list[Path]) -> dict[str, di
     return parse_jsons(predicate_state, load_jsons(data_paths)[0])
 
 
+def apply_override(predicate_state: dict, data: dict, override: dict) -> dict:
+    debug(data)
+    for part in override:
+        if evaluate_predicate(predicate_state, override[part]["predicate"]):
+            debug("applying override " + part)
+            del override[part]["predicate"]
+            data = merge_dicts(data, override[part])
+    return data
+
+
 def merge_dicts(a: dict, b: dict) -> dict:
     output = {}
 
@@ -351,7 +361,7 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
     font_data = {}
     for fontname in data["fonts"]:
         if isinstance(data["fonts"][fontname], dict):
-            font_data[fontname] = data["fonts"][fontname]
+            font_data[fontname] = deepcopy(data["fonts"][fontname])
             if "bitmap" in font_data[fontname]:
                 font_data[fontname]["resolved"] = ImageFont.load(
                     style_dir / data["fonts"]["basepath"] / font_data[fontname]["bitmap"]
@@ -365,30 +375,40 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
     deferred_images = {}
     for imagename in data["images"]:
         if isinstance(data["images"][imagename], dict):
-            image_data[imagename] = data["images"][imagename]
             imagepath = style_dir / data["images"]["basepath"]
+            image_data[imagename] = {}
 
-            match image_data[imagename]["type"]:
+            match data["images"][imagename]["type"]:
                 case "static":
-                    image_data[imagename]["resolved"] = Image.open(imagepath / image_data[imagename]["path"])
+                    image_data[imagename]["resolved"] = Image.open(imagepath / data["images"][imagename]["path"])
                 case "dynamic":
                     image_data[imagename]["resolved"] = Image.open(
-                        resolve_resource(imagepath / image_data[imagename]["pathprefix"], images[imagename])
+                        img := resolve_resource(imagepath / data["images"][imagename]["pathprefix"], images[imagename])
                     )
+                    overridepath = img.parent / (img.stem + ".json")
+                    if overridepath.exists():
+                        debug("loading overrides for " + img.name)
+                        overridefile = overridepath.open()
+                        override = json.load(overridefile)
+                        overridefile.close()
+                        data = apply_override(predicate_state, data, override)
                 case "expand":
                     # image divided into 9 regions, corners stay static
                     # edges and center are stretched out to fit designated width/height
-                    match image_data[imagename]["mode"]:
+                    match data["images"][imagename]["mode"]:
                         case "static":
-                            image_data[imagename]["resolved"] = create_expand(imagepath / image_data[imagename]["path"],
-                                                                              image_data[imagename])
+                            image_data[imagename]["resolved"] = create_expand(
+                                imagepath / data["images"][imagename]["path"], data["images"][imagename]
+                            )
                         case "textbox":
-                            textboxname = image_data[imagename]["textbox"]
-                            deferred_images[textboxname] = image_data[imagename]
-                            deferred_images[textboxname]["path_resolved"] = imagepath / image_data[imagename]["path"]
+                            tboxname = data["images"][imagename]["textbox"]
+                            deferred_images[tboxname] = data["images"][imagename]
+                            deferred_images[tboxname]["path_resolved"] = imagepath / data["images"][imagename]["path"]
+                            del data["images"][imagename]
                             del image_data[imagename]
     debug(font_data)
     debug(image_data)
+    debug(data)
 
     composite = None
     if "basesize" in data["images"]:
@@ -398,7 +418,7 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
         if composite is None:
             composite = image["resolved"].copy()
             continue
-        composite = paste_alpha(composite, image["resolved"], image["position"])
+        composite = paste_alpha(composite, image["resolved"], data["images"][imagename]["position"])
 
     canvas = ImageDraw.Draw(composite)
     default_fontmode = canvas.fontmode
@@ -549,6 +569,7 @@ if __name__ == '__main__':
     # generate("oneshot", {"main": "My rams clock at 1333 megaherds."}, {"face": "shepherd"})
     # generate("omori", {"main": "Hi, OMORI! Cliff-faced as usual, I see.\nYou should totally smile more! I've always liked your smile.", "name": "MARI"}, {"face": "mari_dw_smile2"})
     # parsestr("omori MARI mari_dw_smile2 Hi, OMORI! Cliff-faced as usual, I see.\nYou should totally smile more! I've always liked your smile.")
+    # generate("lennas-inception", {"main": "town. If you're needin' to upgrade ya arsenal, I'm ya bear!", "name": "Rupert"})
     # print(gen_help())
     # print(find_aliases(search="sad"))
     # print(get_image("oneshot", "af"))

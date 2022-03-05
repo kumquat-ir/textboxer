@@ -180,6 +180,8 @@
     "image4": {
 
       // This is an example of a textbox-bound expand image.
+      // Note that the image will be rendered directly below the bound textbox!
+      // This will overwrite any previously rendered textboxes below the image!
 
       // The type of this image. Valid types are "static", "dynamic", and "expand".
       // "expand" means that this image will be expanded to fit a given size.
