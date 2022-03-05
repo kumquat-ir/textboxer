@@ -110,8 +110,11 @@ def evaluate_predicate(predicate_state: dict[str, list], predicate: str) -> bool
         if part == "parse":
             debug("Ignoring 'parse' predicate: it should have already been loaded")
             return False
+        invert = part.startswith("!")
+        if invert:
+            part = part[1:]
         mid = part.find(":")
-        if part[mid + 1:] not in predicate_state[part[:mid]]:
+        if (part[mid + 1:] not in predicate_state[part[:mid]]) != invert:
             return False
     return True
 
@@ -441,13 +444,18 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
                     image_data[imagename]["resolved"] = Image.open(
                         img := resolve_resource(imagepath / data["images"][imagename]["pathprefix"], images[imagename])
                     )
-                    overridepath = img.parent / (img.stem + ".json")
+                    overridepath = img.parent / "overrides.json"
                     if overridepath.exists():
-                        debug("loading overrides for " + img.name)
                         overridefile = overridepath.open()
-                        override = json.load(overridefile)
+                        overrides = json.load(overridefile)
                         overridefile.close()
-                        data = apply_override(predicate_state, data, override)
+                        if img.name in overrides:
+                            overridepath = img.parent / overrides[img.name]
+                            overridefile = overridepath.open()
+                            override = json.load(overridefile)
+                            overridefile.close()
+                            debug("loading overrides for " + img.name)
+                            data = apply_override(predicate_state, data, override)
                 case "expand":
                     # image divided into 9 regions, corners stay static
                     # edges and center are stretched out to fit designated width/height
@@ -510,6 +518,11 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
                                   spacing=font["spacing"],
                                   font=font["resolved"],
                                   fill=fill)
+
+    if "postscale" in data:
+        cursize = composite.size
+        postscale = data["postscale"]
+        composite = composite.resize((cursize[0] * postscale[0], cursize[1] * postscale[1]), Image.NEAREST)
 
     if out is not None:
         composite.save(out)
@@ -625,7 +638,8 @@ if __name__ == '__main__':
     # generate("omori", {"main": "Hi, OMORI! Cliff-faced as usual, I see.\nYou should totally smile more! I've always liked your smile.", "name": "MARI"}, {"face": "mari_dw_smile2"})
     # parsestr("omori MARI mari_dw_smile2 Hi, OMORI! Cliff-faced as usual, I see.\nYou should totally smile more! I've always liked your smile.")
     # generate("lennas-inception", {"main": "town. If you're needin' to upgrade ya arsenal, I'm ya bear!", "name": "Rupert"})
-    parsestr("lennas-inception Lenna lenna1 Hmm? I'm not going to need this.")
+    # parsestr("lennas-inception Lenna lenna1 Hmm? I'm not going to need this.")
+    parsestr("lennas-inception f:smallcaps Telephone misc-default 1 file attachment(s). Open attachment?")
     # print(gen_help())
     # print(find_aliases(search="sad"))
     # print(get_image("oneshot", "af"))
