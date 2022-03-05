@@ -491,14 +491,19 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
             fill = tuple(textbox["color"]) if "color" in textbox else None
             if not font["antialias"]:
                 canvas.fontmode = "1"
-            if textbox_data[textboxname]["max_width"] != textbox["max_width"]:
+
+            # use preloaded wrapped text, if applicable
+            if textbox_data[textboxname]["font"] == textbox["font"] \
+                    and textbox_data[textboxname]["max_width"] == textbox["max_width"] \
+                    and textbox_data[textboxname]["max_lines"] == textbox["max_lines"] \
+                    and textbox_data[textboxname]["line_wrap"] == textbox["line_wrap"]:
+                text_wrapped = textbox_data[textboxname]["text"]
+            else:
                 text_wrapped = wrap_text(text[textboxname], textbox["max_width"], font["resolved"], canvas)
 
                 lines = text_wrapped.count("\n") + 1
                 if lines > textbox["max_lines"] and textbox["line_wrap"] == "cut":
                     text_wrapped = text_wrapped[:find_nth(text_wrapped, "\n", textbox["max_lines"])]
-            else:
-                text_wrapped = textbox_data[textboxname]["text"]
 
             canvas.multiline_text(textbox["anchor"],
                                   text_wrapped,
