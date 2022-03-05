@@ -357,7 +357,7 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
         data = resolve_jsons(predicate_state, list(default_data.glob("*.json")) + list(style_data.glob("*.json")))
     debug(data)
 
-    # resolve font and image files
+    # resolve font files
     font_data = {}
     for fontname in data["fonts"]:
         if isinstance(data["fonts"][fontname], dict):
@@ -371,9 +371,65 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
                 font_data[fontname]["resolved"] = ImageFont.truetype(fontfile, font_data[fontname]["size"])
                 fontfile.close()
 
+    # preload some textbox data
+    # dummy canvas
+    canvas = ImageDraw.Draw(Image.new("RGBA", (1000, 1000), (0, 0, 0, 0)))
+    default_fontmode = canvas.fontmode
+    textbox_data = {}
+    for textboxname in data["textboxes"]:
+        if isinstance(data["textboxes"][textboxname], dict):
+
+            canvas.fontmode = default_fontmode
+            textbox = data["textboxes"][textboxname]
+
+            # short-circuit if the data is already there, because it was calculated for
+            #   a textbox that either inherits from it or a textbox it inherits from.
+            # but only do this if the relevant parameters are equal
+            if "inherittext" in textbox:
+                inheritname = textbox["inherittext"]
+                text[textboxname] = text[inheritname]
+                if inheritname in textbox_data:
+                    if textbox_data[inheritname]["font"] == textbox["font"] \
+                            and textbox_data[inheritname]["max_width"] == textbox["max_width"] \
+                            and textbox_data[inheritname]["max_lines"] == textbox["max_lines"] \
+                            and textbox_data[inheritname]["line_wrap"] == textbox["line_wrap"]:
+                        textbox_data[textboxname] = textbox_data[inheritname]
+                        continue
+
+            if textboxname in textbox_data:
+                if textbox_data[textboxname]["font"] == textbox["font"] \
+                        and textbox_data[textboxname]["max_width"] == textbox["max_width"] \
+                        and textbox_data[textboxname]["max_lines"] == textbox["max_lines"] \
+                        and textbox_data[textboxname]["line_wrap"] == textbox["line_wrap"]:
+                    continue
+
+            textbox_data[textboxname] = textbox
+            font = font_data[textbox["font"]]
+            if not font["antialias"]:
+                canvas.fontmode = "1"
+            text_wrapped = wrap_text(text[textboxname], textbox["max_width"], font["resolved"], canvas)
+
+            lines = text_wrapped.count("\n") + 1
+            if lines > textbox["max_lines"] and textbox["line_wrap"] == "cut":
+                text_wrapped = text_wrapped[:find_nth(text_wrapped, "\n", textbox["max_lines"])]
+
+            textbox_data[textboxname]["text"] = text_wrapped
+            textbox_data[textboxname]["size"] = canvas.multiline_textsize(text_wrapped,
+                                                                          spacing=font["spacing"],
+                                                                          font=font["resolved"])
+
+            if "inherittext" in textbox and textbox["inherittext"] not in textbox_data:
+                textbox_data[textbox["inherittext"]] = textbox
+                textbox_data[textbox["inherittext"]]["text"] = textbox_data[textboxname]["text"]
+                textbox_data[textbox["inherittext"]]["size"] = textbox_data[textboxname]["size"]
+
+    # resolve image files
     image_data = {}
-    deferred_images = {}
+    imagenames = []
+    # in case overrides do funky stuff and change the length of data["images"]
     for imagename in data["images"]:
+        imagenames.append(imagename)
+    for imagename in imagenames:
         if isinstance(data["images"][imagename], dict):
             imagepath = style_dir / data["images"]["basepath"]
             image_data[imagename] = {}
@@ -402,10 +458,15 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
                             )
                         case "textbox":
                             tboxname = data["images"][imagename]["textbox"]
-                            deferred_images[tboxname] = data["images"][imagename]
-                            deferred_images[tboxname]["path_resolved"] = imagepath / data["images"][imagename]["path"]
-                            del data["images"][imagename]
-                            del image_data[imagename]
+                            if "x" in data["images"][imagename]["bind_axes"]:
+                                data["images"][imagename]["size"][0] = \
+                                    textbox_data[tboxname]["size"][0] + data["images"][imagename]["sizemod"][0]
+                            if "y" in data["images"][imagename]["bind_axes"]:
+                                data["images"][imagename]["size"][1] = \
+                                    textbox_data[tboxname]["size"][1] + data["images"][imagename]["sizemod"][1]
+                            image_data[imagename]["resolved"] = create_expand(
+                                imagepath / data["images"][imagename]["path"], data["images"][imagename]
+                            )
     debug(font_data)
     debug(image_data)
     debug(data)
@@ -428,27 +489,16 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
             textbox = data["textboxes"][textboxname]
             font = font_data[textbox["font"]]
             fill = tuple(textbox["color"]) if "color" in textbox else None
-            if "inherittext" in textbox:
-                text[textboxname] = text[textbox["inherittext"]]
             if not font["antialias"]:
                 canvas.fontmode = "1"
-            text_wrapped = wrap_text(text[textboxname], textbox["max_width"], font["resolved"], canvas)
+            if textbox_data[textboxname]["max_width"] != textbox["max_width"]:
+                text_wrapped = wrap_text(text[textboxname], textbox["max_width"], font["resolved"], canvas)
 
-            lines = text_wrapped.count("\n") + 1
-            if lines > textbox["max_lines"] and textbox["line_wrap"] == "cut":
-                text_wrapped = text_wrapped[:find_nth(text_wrapped, "\n", textbox["max_lines"])]
-
-            if textboxname in deferred_images:
-                tw, th = canvas.multiline_textsize(text_wrapped,
-                                                   spacing=font["spacing"],
-                                                   font=font["resolved"])
-                image = deferred_images[textboxname]
-                if "x" in image["bind_axes"]:
-                    image["size"][0] = tw + image["sizemod"][0]
-                if "y" in image["bind_axes"]:
-                    image["size"][1] = th + image["sizemod"][1]
-                composite = paste_alpha(composite, create_expand(image["path_resolved"], image), image["position"])
-                canvas = ImageDraw.Draw(composite)
+                lines = text_wrapped.count("\n") + 1
+                if lines > textbox["max_lines"] and textbox["line_wrap"] == "cut":
+                    text_wrapped = text_wrapped[:find_nth(text_wrapped, "\n", textbox["max_lines"])]
+            else:
+                text_wrapped = textbox_data[textboxname]["text"]
 
             canvas.multiline_text(textbox["anchor"],
                                   text_wrapped,
@@ -560,7 +610,7 @@ def get_image(style: str, image: str) -> Path | None:
 if __name__ == '__main__':
     debug_mode = True
     # generate("omori", {"main": "I hope you're having a great day!", "name": "MARI"}, {"face": "mari_happy"})
-    generate("oneshot", {"main": "mhm yep uh huh yeah got it mhm great yeah uh huh okay"}, {"face": "af"})
+    # generate("oneshot", {"main": "mhm yep uh huh yeah got it mhm great yeah uh huh okay"}, {"face": "af"})
     # generate("omori", {"main": "I am... a gift for you... DREAMER.", "name": "ABBI"}, flags=["scared"])
     # generate("omori", {"main": "He remains the DREAMER's favorite even to this day... watching diligently... waiting for something to happen.", "name": "BRANCH CORAL"})
     # parsestrlist(["The way is blocked... by blocks!"])
@@ -570,6 +620,7 @@ if __name__ == '__main__':
     # generate("omori", {"main": "Hi, OMORI! Cliff-faced as usual, I see.\nYou should totally smile more! I've always liked your smile.", "name": "MARI"}, {"face": "mari_dw_smile2"})
     # parsestr("omori MARI mari_dw_smile2 Hi, OMORI! Cliff-faced as usual, I see.\nYou should totally smile more! I've always liked your smile.")
     # generate("lennas-inception", {"main": "town. If you're needin' to upgrade ya arsenal, I'm ya bear!", "name": "Rupert"})
+    parsestr("lennas-inception Lenna lenna1 Hmm? I'm not going to need this.")
     # print(gen_help())
     # print(find_aliases(search="sad"))
     # print(get_image("oneshot", "af"))
