@@ -1,4 +1,8 @@
 {
   "predicate": "parse",
-  "str": ["text:name", "image:sprite", "textfill:main"]
+  "str": ["text:name", "image:sprite", "textfill:main"],
+  "pickup": {
+    "str": ["text:name", "image:sprite", "textfill:main"],
+    "setpredicates": ["textbox:name"]
+  }
 }

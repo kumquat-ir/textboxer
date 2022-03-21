@@ -1,6 +1,6 @@
 {
   "sort": 100,
-  "predicate": "flag:smallcaps&textbox:name",
+  "predicate": "flag:smallcaps&textbox:name&mode:default",
   "textboxes": {
     "name-shadow1": {
       "font": "smallcaps"

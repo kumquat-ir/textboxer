@@ -1,6 +1,6 @@
 {
   "sort": 3,
-  "predicate": "image:sprite&textbox:name",
+  "predicate": "image:sprite&textbox:name&mode:default",
   "textboxes": {
     "main-shadow1": {
       "anchor": [48, 27],

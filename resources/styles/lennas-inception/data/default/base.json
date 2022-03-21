@@ -75,5 +75,6 @@
       "line_wrap": "cut",
       "color": [230, 223, 206]
     }
-  }
+  },
+  "postscale": [2, 2]
 }

@@ -1,6 +1,6 @@
 {
   "sort": 1,
-  "predicate": "textbox:name",
+  "predicate": "textbox:name&mode:default",
   "images": {
     "basesize": [304, 64],
     "frame": {

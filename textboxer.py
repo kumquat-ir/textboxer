@@ -6,6 +6,7 @@
 
 import json
 import math
+import sys
 
 from copy import deepcopy
 
@@ -39,6 +40,22 @@ def paste_alpha(base: Image.Image, overlay: Image.Image, offset: tuple = (0, 0))
     padded_overlay = Image.new("RGBA", base.size, (0, 0, 0, 0))
     padded_overlay.paste(overlay, offset)
     return Image.alpha_composite(base, padded_overlay)
+
+
+def get_filter(imgfilter: str):
+    match imgfilter.lower():
+        case "bilinear":
+            return Image.BILINEAR
+        case "bicubic":
+            return Image.BICUBIC
+        case "box":
+            return Image.BOX
+        case "lanczos":
+            return Image.LANCZOS
+        case "hamming":
+            return Image.HAMMING
+        case _:
+            return Image.NEAREST
 
 
 def find_nth(haystack, needle, n):
@@ -141,7 +158,7 @@ def load_jsons(data_paths: list[Path]) -> (dict[int, list], dict[str, dict]):
     return sorts, preloads
 
 
-def parse_jsons(predicate_state: dict, sorts: dict[int, list]) -> dict[str, dict]:
+def parse_jsons(predicate_state: dict, sorts: dict[int, list]) -> dict[str]:
     output = {}
 
     for sort_value in sorted(sorts.keys()):
@@ -155,7 +172,7 @@ def parse_jsons(predicate_state: dict, sorts: dict[int, list]) -> dict[str, dict
     return output
 
 
-def resolve_jsons(predicate_state: dict, data_paths: list[Path]) -> dict[str, dict]:
+def resolve_jsons(predicate_state: dict, data_paths: list[Path]) -> dict[str]:
     return parse_jsons(predicate_state, load_jsons(data_paths)[0])
 
 
@@ -251,7 +268,7 @@ def create_expand(base_imagepath: Path, image_data: dict) -> Image.Image:
     return output
 
 
-def parsestr(textin: str, *, out: str = None, presplit: list[str] = None):
+def parsestr(textin: str = "", *, out: str = None, presplit: list[str] = None):
     args = textin.split(" ") if presplit is None else presplit
     style = None
     text = {}
@@ -266,14 +283,14 @@ def parsestr(textin: str, *, out: str = None, presplit: list[str] = None):
         del args[0]
     if style is None:
         # need to load just the default parse data to get the default style, could be cached but effort
-        _, preload = load_jsons(list(default_data.glob("*.json")))
+        _, preload = load_jsons(list(default_data.rglob("*.json")))
         style = preload["defaultstyle"]
 
     style_data = style_root / style / "data"
-    sorts, preload = load_jsons(list(default_data.glob("*.json")) + list(style_data.glob("*.json")))
+    sorts, preload = load_jsons(list(default_data.rglob("*.json")) + list(style_data.rglob("*.json")))
 
-    while args[0].startswith("f:") or args[0].startswith("flag:"):
-        flags.append(args[0][args[0].find(":") + 1:])
+    while args[0].startswith("f:"):
+        flags.append(args[0][2:])
         del args[0]
 
     for argdesc in preload["str"]:
@@ -316,11 +333,11 @@ def parsestrlist(args: list[str], *, style: str = None, text: dict[str, str] = N
         del args[0]
     if style is None:
         # need to load just the default parse data to get the default style, could be cached but effort
-        _, preload = load_jsons(list(default_data.glob("*.json")))
+        _, preload = load_jsons(list(default_data.rglob("*.json")))
         style = preload["defaultstyle"]
 
     style_data = style_root / style / "data"
-    sorts, preload = load_jsons(list(default_data.glob("*.json")) + list(style_data.glob("*.json")))
+    sorts, preload = load_jsons(list(default_data.rglob("*.json")) + list(style_data.rglob("*.json")))
 
     for argdesc in preload["args"]:
         key, value = argdesc.split(":")
@@ -357,7 +374,7 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
     if preload_data is not None:
         data = parse_jsons(predicate_state, preload_data)
     else:
-        data = resolve_jsons(predicate_state, list(default_data.glob("*.json")) + list(style_data.glob("*.json")))
+        data = resolve_jsons(predicate_state, list(default_data.rglob("*.json")) + list(style_data.rglob("*.json")))
     debug(data)
 
     # resolve font files
@@ -441,6 +458,7 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
                 case "static":
                     image_data[imagename]["resolved"] = Image.open(imagepath / data["images"][imagename]["path"])
                 case "dynamic":
+                    debug("resolving " + imagename)
                     image_data[imagename]["resolved"] = Image.open(
                         img := resolve_resource(imagepath / data["images"][imagename]["pathprefix"], images[imagename])
                     )
@@ -475,6 +493,12 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
                             image_data[imagename]["resolved"] = create_expand(
                                 imagepath / data["images"][imagename]["path"], data["images"][imagename]
                             )
+            if "scaleto" in data["images"][imagename]:
+                imgfilter = Image.NEAREST
+                if "scalefilter" in data["images"][imagename]:
+                    imgfilter = get_filter(data["images"][imagename]["scalefilter"])
+                image_data[imagename]["resolved"] = image_data[imagename]["resolved"].resize(
+                    data["images"][imagename]["scaleto"], imgfilter)
     debug(font_data)
     debug(image_data)
     debug(data)
@@ -513,16 +537,29 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
                 if lines > textbox["max_lines"] and textbox["line_wrap"] == "cut":
                     text_wrapped = text_wrapped[:find_nth(text_wrapped, "\n", textbox["max_lines"])]
 
+            anchortype = None
+            align = "left"
+
+            if "anchortype" in textbox:
+                anchortype = textbox["anchortype"]
+            if "align" in textbox:
+                align = textbox["align"]
+
             canvas.multiline_text(textbox["anchor"],
                                   text_wrapped,
                                   spacing=font["spacing"],
                                   font=font["resolved"],
-                                  fill=fill)
+                                  fill=fill,
+                                  anchor=anchortype,
+                                  align=align)
 
     if "postscale" in data:
         cursize = composite.size
         postscale = data["postscale"]
-        composite = composite.resize((cursize[0] * postscale[0], cursize[1] * postscale[1]), Image.NEAREST)
+        imgfilter = Image.NEAREST
+        if "scalefilter" in data:
+            imgfilter = get_filter(data["scalefilter"])
+        composite = composite.resize((int(cursize[0] * postscale[0]), int(cursize[1] * postscale[1])), imgfilter)
 
     if out is not None:
         composite.save(out)
@@ -545,14 +582,14 @@ def gen_help() -> str:
     output = output[:output.rfind(", ")]
 
     output += "\nDefault style: "
-    _, preload = load_jsons(list(default_data.glob("*.json")))
+    _, preload = load_jsons(list(default_data.rglob("*.json")))
     output += preload["defaultstyle"]
 
     output += "\nStyle options:"
     flags = {}
     for style in stylelist:
         style_data = resource_root / "styles" / style / "data"
-        sorts, preload = load_jsons(list(style_data.glob("*.json")))
+        sorts, preload = load_jsons(list(style_data.rglob("*.json")))
         output += "\n" + style.ljust(longest_style + 3)
         for arg in preload["str"]:
             key, value = arg.split(":")
@@ -629,6 +666,8 @@ def get_image(style: str, image: str) -> Path | None:
 
 if __name__ == '__main__':
     debug_mode = True
+    if len(sys.argv) > 1:
+        parsestr("", presplit=sys.argv[1:])
     # generate("omori", {"main": "I hope you're having a great day!", "name": "MARI"}, {"face": "mari_happy"})
     # generate("oneshot", {"main": "mhm yep uh huh yeah got it mhm great yeah uh huh okay"}, {"face": "af"})
     # generate("omori", {"main": "I am... a gift for you... DREAMER.", "name": "ABBI"}, flags=["scared"])
@@ -640,8 +679,10 @@ if __name__ == '__main__':
     # generate("omori", {"main": "Hi, OMORI! Cliff-faced as usual, I see.\nYou should totally smile more! I've always liked your smile.", "name": "MARI"}, {"face": "mari_dw_smile2"})
     # parsestr("omori MARI mari_dw_smile2 Hi, OMORI! Cliff-faced as usual, I see.\nYou should totally smile more! I've always liked your smile.")
     # generate("lennas-inception", {"main": "town. If you're needin' to upgrade ya arsenal, I'm ya bear!", "name": "Rupert"})
-    parsestr("", presplit=["lennas-inception", "f:gothicname", "Archangel Lenna", "archangellenna", "Come out and show yourself, coward!"])
-    # parsestr("lennas-inception f:smallcaps Telephone misc-default 1 file attachment(s). Open attachment?")
+    # parsestr(presplit=["lennas-inception", "f:gothicname", "Archangel Lenna", "archangellenna", "Come out and show yourself, coward!"])
+    # parsestr("lennas-inception f:smallcaps Telephone misc_default 1 file attachment(s). Open attachment?")
+    # parsestr("oneshot en_huh ...yeah let's get outta here.")
+    # parsestr("celeste !NONE! Oh... I'm just passing through.\nI'm climbing the Mountain.")
     # print(gen_help())
     # print(find_aliases(search="sad"))
     # print(get_image("oneshot", "af"))
