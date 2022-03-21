@@ -131,7 +131,7 @@ def evaluate_predicate(predicate_state: dict[str, list], predicate: str) -> bool
         if invert:
             part = part[1:]
         mid = part.find(":")
-        if (part[mid + 1:] not in predicate_state[part[:mid]]) != invert:
+        if part[:mid] not in predicate_state or (part[mid + 1:] not in predicate_state[part[:mid]]) != invert:
             return False
     return True
 
