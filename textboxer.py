@@ -274,6 +274,8 @@ def parsestr(textin: str = "", *, out: str = None, presplit: list[str] = None):
     text = {}
     images = {}
     flags = []
+    mode = "default"
+    setpredicates = None
     default_data = resource_root / "default" / "data"
     style_root = resource_root / "styles"
 
@@ -286,6 +288,10 @@ def parsestr(textin: str = "", *, out: str = None, presplit: list[str] = None):
         _, preload = load_jsons(list(default_data.rglob("*.json")))
         style = preload["defaultstyle"]
 
+    if args[0].startswith("m:"):
+        mode = args[0][2:]
+        del args[0]
+
     style_data = style_root / style / "data"
     sorts, preload = load_jsons(list(default_data.rglob("*.json")) + list(style_data.rglob("*.json")))
 
@@ -293,7 +299,19 @@ def parsestr(textin: str = "", *, out: str = None, presplit: list[str] = None):
         flags.append(args[0][2:])
         del args[0]
 
-    for argdesc in preload["str"]:
+    if mode in preload:
+        strkey = preload[mode]["str"]
+        if "setpredicates" in preload[mode]:
+            setpredicates = {}
+            for predicate in preload[mode]["setpredicates"]:
+                mid = predicate.find(":")
+                if predicate[:mid] not in setpredicates:
+                    setpredicates[predicate[:mid]] = []
+                setpredicates[predicate[:mid]].append(predicate[mid + 1:])
+    else:
+        strkey = preload["str"]
+
+    for argdesc in strkey:
         key, value = argdesc.split(":")
         match key:
             case "text":
@@ -313,7 +331,7 @@ def parsestr(textin: str = "", *, out: str = None, presplit: list[str] = None):
         if len(args) <= 0:
             break
 
-    generate(style, text, images, flags, preload_data=sorts, out=out)
+    generate(style, text, images, flags, mode, preload_data=sorts, out=out, add_predicates=setpredicates)
 
 
 def parsestrlist(args: list[str], *, style: str = None, text: dict[str, str] = None,
@@ -359,13 +377,19 @@ def parsestrlist(args: list[str], *, style: str = None, text: dict[str, str] = N
     generate(style, text, images, flags, preload_data=sorts, out=out)
 
 
-def generate(style: str, text: dict[str, str], images: dict[str, str] = None,
-             flags: list[str] = None, *, out: str = None, preload_data: dict[int, list] = None):
+def generate(style: str, text: dict[str, str], images: dict[str, str] = None, flags: list[str] = None,
+             mode: str = "default", *, out: str = None, preload_data: dict[int, list] = None,
+             add_predicates: dict[str, list] = None):
     predicate_state = {
         "textbox": list(text) if text is not None else [],
         "image": list(images) if images is not None else [],
-        "flag": flags if flags is not None else []
+        "flag": flags if flags is not None else [],
+        "mode": [mode]
     }
+    if add_predicates is not None:
+        for category in add_predicates:
+            predicate_state[category].extend(add_predicates[category])
+
     debug(predicate_state)
     default_data = resource_root / "default" / "data"
     style_dir = resource_root / "styles" / style
