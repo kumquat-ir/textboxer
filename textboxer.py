@@ -18,6 +18,7 @@ from pathlib import Path
 
 debug_mode = False
 resource_root: Path = Path("resources")
+resolve_with_paths = False
 
 
 def debug(text):
@@ -25,7 +26,17 @@ def debug(text):
         print(text)
 
 
+def resolve_next_with_path():
+    global resolve_with_paths
+    resolve_with_paths = True
+
+
 def resolve_resource(base: Path, key: str) -> Path | None:
+    global resolve_with_paths
+    if resolve_with_paths and (base / key).exists():
+        resolve_with_paths = False
+        return base / key
+
     if (base / "alias.json").exists():
         alias_file = (base / "alias.json").open()
         aliases = json.load(alias_file)
@@ -694,6 +705,7 @@ if __name__ == '__main__':
     debug_mode = True
     if len(sys.argv) > 1:
         parsestr("", presplit=sys.argv[1:])
+        exit(0)
     # generate("omori", {"main": "I hope you're having a great day!", "name": "MARI"}, {"face": "mari_happy"})
     # generate("oneshot", {"main": "mhm yep uh huh yeah got it mhm great yeah uh huh okay"}, {"face": "af"})
     # generate("omori", {"main": "I am... a gift for you... DREAMER.", "name": "ABBI"}, flags=["scared"])
