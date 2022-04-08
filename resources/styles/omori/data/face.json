@@ -17,7 +17,8 @@
     "face": {
       "type": "dynamic",
       "pathprefix": "faces",
-      "position": [499, 5]
+      "position": [499, 5],
+      "scaleto": [106, 106]
     },
     "face_frame": {
       "type": "expand",

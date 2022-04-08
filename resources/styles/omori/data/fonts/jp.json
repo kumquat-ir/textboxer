@@ -1,0 +1,9 @@
+{
+  "sort": 100,
+  "predicate": "flag:jp",
+  "textboxes": {
+    "main": {
+      "font": "japanese"
+    }
+  }
+}

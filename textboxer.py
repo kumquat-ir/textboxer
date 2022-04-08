@@ -53,7 +53,7 @@ def paste_alpha(base: Image.Image, overlay: Image.Image, offset: tuple = (0, 0))
     return Image.alpha_composite(base, padded_overlay)
 
 
-def get_filter(imgfilter: str):
+def get_filter(imgfilter: str, default: int = Image.NEAREST):
     match imgfilter.lower():
         case "bilinear":
             return Image.BILINEAR
@@ -65,8 +65,10 @@ def get_filter(imgfilter: str):
             return Image.LANCZOS
         case "hamming":
             return Image.HAMMING
-        case _:
+        case "nearest":
             return Image.NEAREST
+        case _:
+            return default
 
 
 def find_nth(haystack, needle, n):
@@ -428,6 +430,32 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None, fl
                 font_data[fontname]["resolved"] = ImageFont.truetype(fontfile, font_data[fontname]["size"])
                 fontfile.close()
 
+    # apply image overrides and resolve dynamic image paths
+    imagenames = []
+    for imagename in data["images"]:
+        imagenames.append(imagename)
+    for imagename in imagenames:
+        if isinstance(data["images"][imagename], dict):
+            imagepath = style_dir / data["images"]["basepath"]
+            if data["images"][imagename]["type"] == "dynamic":
+                debug("resolving " + imagename)
+                imgbasepath = imagepath / data["images"][imagename]["pathprefix"]
+                data["images"][imagename]["resolvedpath"] = resolve_resource(imgbasepath, images[imagename])
+                overridepath = imgbasepath / "overrides.json"
+                debug(overridepath)
+                if overridepath.exists():
+                    imgrel = data["images"][imagename]["resolvedpath"].relative_to(imgbasepath)
+                    overridefile = overridepath.open()
+                    overrides = json.load(overridefile)
+                    overridefile.close()
+                    if str(imgrel) in overrides:
+                        overridepath = imgbasepath / overrides[str(imgrel)]
+                        overridefile = overridepath.open()
+                        override = json.load(overridefile)
+                        overridefile.close()
+                        debug("loading overrides for " + imgrel.name)
+                        data = apply_override(predicate_state, data, override)
+
     # preload some textbox data
     # dummy canvas
     canvas = ImageDraw.Draw(Image.new("RGBA", (1000, 1000), (0, 0, 0, 0)))
@@ -482,11 +510,7 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None, fl
 
     # resolve image files
     image_data = {}
-    imagenames = []
-    # in case overrides do funky stuff and change the length of data["images"]
     for imagename in data["images"]:
-        imagenames.append(imagename)
-    for imagename in imagenames:
         if isinstance(data["images"][imagename], dict):
             imagepath = style_dir / data["images"]["basepath"]
             image_data[imagename] = {}
@@ -495,22 +519,7 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None, fl
                 case "static":
                     image_data[imagename]["resolved"] = Image.open(imagepath / data["images"][imagename]["path"])
                 case "dynamic":
-                    debug("resolving " + imagename)
-                    image_data[imagename]["resolved"] = Image.open(
-                        img := resolve_resource(imagepath / data["images"][imagename]["pathprefix"], images[imagename])
-                    )
-                    overridepath = img.parent / "overrides.json"
-                    if overridepath.exists():
-                        overridefile = overridepath.open()
-                        overrides = json.load(overridefile)
-                        overridefile.close()
-                        if img.name in overrides:
-                            overridepath = img.parent / overrides[img.name]
-                            overridefile = overridepath.open()
-                            override = json.load(overridefile)
-                            overridefile.close()
-                            debug("loading overrides for " + img.name)
-                            data = apply_override(predicate_state, data, override)
+                    image_data[imagename]["resolved"] = Image.open(data["images"][imagename]["resolvedpath"])
                 case "expand":
                     # image divided into 9 regions, corners stay static
                     # edges and center are stretched out to fit designated width/height
@@ -531,9 +540,9 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None, fl
                                 imagepath / data["images"][imagename]["path"], data["images"][imagename]
                             )
             if "scaleto" in data["images"][imagename]:
-                imgfilter = Image.NEAREST
+                imgfilter = Image.BILINEAR
                 if "scalefilter" in data["images"][imagename]:
-                    imgfilter = get_filter(data["images"][imagename]["scalefilter"])
+                    imgfilter = get_filter(data["images"][imagename]["scalefilter"], Image.BILINEAR)
                 image_data[imagename]["resolved"] = image_data[imagename]["resolved"].resize(
                     data["images"][imagename]["scaleto"], imgfilter)
     debug(font_data)
@@ -720,7 +729,7 @@ if __name__ == '__main__':
     # parsestr(presplit=["lennas-inception", "f:gothicname", "Archangel Lenna", "archangellenna", "Come out and show yourself, coward!"])
     # parsestr("lennas-inception f:smallcaps Telephone misc_default 1 file attachment(s). Open attachment?")
     # parsestr("oneshot en_huh ...yeah let's get outta here.")
-    # parsestr("celeste !NONE! Oh... I'm just passing through.\nI'm climbing the Mountain.")
+    parsestr("celeste madeline_normal00 Oh... I'm just passing through.\nI'm climbing the Mountain.")
     # print(gen_help())
     # print(find_aliases(search="sad"))
     # print(get_image("oneshot", "af"))

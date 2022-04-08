@@ -1,0 +1,29 @@
+{
+  "sort": 0,
+  "predicate": "always",
+  "fonts": {
+    "default": {
+      "path": "Renogare-Regular.otf",
+      "size": 45,
+      "antialias": true,
+      "spacing": 23
+    }
+  },
+  "images": {
+    "frame": {
+      "type": "static",
+      "path": "default.png",
+      "position": [0, 0]
+    }
+  },
+  "textboxes": {
+    "main": {
+      "font": "default",
+      "anchor": [899, 199],
+      "max_width": 1400,
+      "max_lines": 3,
+      "line_wrap": "cut",
+      "anchortype": "mm"
+    }
+  }
+}

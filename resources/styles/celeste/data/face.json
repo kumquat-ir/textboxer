@@ -5,13 +5,13 @@
     "face": {
       "type": "dynamic",
       "pathprefix": "faces",
-      "position": [496, 16],
-      "scaleto": [96, 96]
+      "position": [84, 92],
+      "scaleto": [216, 216]
     }
   },
   "textboxes": {
     "main": {
-      "max_width": 460
+      "anchor": [1020, 201]
     }
   }
 }

@@ -13,6 +13,12 @@
       "size": 28,
       "antialias": true,
       "spacing": 6
+    },
+    "japanese": {
+      "path": "HuiFontP29.ttf",
+      "size": 28,
+      "antialias": true,
+      "spacing": 6
     }
   },
   "images": {

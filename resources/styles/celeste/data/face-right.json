@@ -1,0 +1,14 @@
+{
+  "sort": 100,
+  "predicate": "image:face&flag:r",
+  "images": {
+    "face": {
+      "position": [1500, 92]
+    }
+  },
+  "textboxes": {
+    "main": {
+      "anchor": [780, 201]
+    }
+  }
+}
