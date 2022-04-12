@@ -443,7 +443,7 @@ def generate(style: str, text: dict[str, str], images: dict[str, str] = None, fl
                 data["images"][imagename]["resolvedpath"] = resolve_resource(imgbasepath, images[imagename])
                 overridepath = imgbasepath / "overrides.json"
                 debug(overridepath)
-                if overridepath.exists():
+                if overridepath.exists() and imgbasepath.is_relative_to(data["images"][imagename]["resolvedpath"]):
                     imgrel = data["images"][imagename]["resolvedpath"].relative_to(imgbasepath)
                     overridefile = overridepath.open()
                     overrides = json.load(overridefile)
